@@ -1,0 +1,74 @@
+FROM kalilinux/kali-rolling
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install core pentest tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Networking
+    nmap \
+    netcat-openbsd \
+    net-tools \
+    iputils-ping \
+    curl \
+    wget \
+    socat \
+    # Web
+    sqlmap \
+    nikto \
+    dirb \
+    gobuster \
+    whatweb \
+    # Exploitation
+    metasploit-framework \
+    exploitdb \
+    # Password
+    john \
+    hashcat \
+    hydra \
+    # Wireless
+    aircrack-ng \
+    # Forensics
+    binwalk \
+    binutils \
+    file \
+    # Utilities
+    vim \
+    nano \
+    git \
+    python3 \
+    python3-pip \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install additional Python tools
+RUN pip3 install --break-system-packages \
+    impacket \
+    pwntools \
+    requests
+
+# Create non-root user for running tools
+RUN useradd -m -s /bin/bash agent && \
+    echo "agent:agent" | chpasswd && \
+    usermod -aG sudo agent
+
+# Create workspace directory
+RUN mkdir -p /workspace && chown agent:agent /workspace
+
+# Install Node.js for pi coding-agent
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install pi coding-agent
+RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+
+# Create agent config directory
+RUN mkdir -p /root/.pi/agent
+
+# Copy entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+WORKDIR /workspace
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

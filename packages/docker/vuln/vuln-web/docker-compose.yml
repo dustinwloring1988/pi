@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+  web:
+    build: .
+    container_name: vuln-web
+    ports:
+      - "5000:5000"
+    networks:
+      - vuln-net
+
+networks:
+  vuln-net:
+    external: true

@@ -1,0 +1,13 @@
+version: '2'
+services:
+  redis:
+    container_name: vuln-redis
+    build: .
+    ports:
+      - "6379:6379"
+    networks:
+      - vuln-net
+
+networks:
+  vuln-net:
+    external: true
