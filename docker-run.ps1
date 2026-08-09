@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Builds and runs the pi coding-agent in Docker with Ollama support.
+    Builds and runs the agent-aegis security agent in Docker with Ollama support.
 
 .DESCRIPTION
-    This script builds a Docker image for the pi coding-agent and runs it with:
+    This script builds a Docker image for agent-aegis and runs it with:
     - A mounted workspace directory
     - Connection to your local Ollama instance
     - Configurable model (defaults to qwen3.6:27b)
-    - Choice of Ubuntu (default) or Kali Linux container
+    - Choice of Ubuntu (default), Kali Linux, or Debian container
     - Optional vulnerable target containers for security testing
 
 .PARAMETER WorkspaceDir
@@ -20,18 +20,19 @@
 
 .PARAMETER ImageName
     Docker image name.
-    Defaults to "pi-coding-agent".
+    Defaults to "agent-aegis".
 
 .PARAMETER ContainerType
-    Container type: "ubuntu" (default) or "kali".
+    Container type: "ubuntu" (default), "kali", or "debian".
     Kali includes full pentest toolkit (nmap, sqlmap, nikto, metasploit, etc.).
+    Debian is a minimal base with common utilities.
 
 .PARAMETER VulnContainer
     Vulnerable container to start alongside the agent.
     "none" (default), "web" (Flask app on port 5000), or "redis" (Redis 5.0.7 with CVE-2022-0543 on port 6379).
 
 .PARAMETER AdditionalArgs
-    Additional arguments to pass to the pi command inside the container.
+    Additional arguments to pass to the aegis command inside the container.
 
 .PARAMETER ListModels
     If set, lists available models and exits.
@@ -64,8 +65,8 @@
 param(
     [string]$WorkspaceDir = ".",
     [string]$Model = "qwen3.6:27b",
-    [string]$ImageName = "pi-coding-agent",
-    [ValidateSet("ubuntu", "kali")]
+    [string]$ImageName = "agent-aegis",
+    [ValidateSet("ubuntu", "kali", "debian")]
     [string]$ContainerType = "ubuntu",
     [ValidateSet("none", "web", "redis")]
     [string]$VulnContainer = "none",
@@ -130,7 +131,7 @@ if ($VulnContainer -ne "none") {
     Write-Host "Vulnerable target: vuln-$VulnContainer" -ForegroundColor Green
 }
 Write-Host ""
-Write-Host "Starting pi coding-agent in Docker..." -ForegroundColor Cyan
+Write-Host "Starting agent-aegis in Docker..." -ForegroundColor Cyan
 Write-Host ""
 
 # Run the container

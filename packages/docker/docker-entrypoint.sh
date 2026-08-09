@@ -2,9 +2,9 @@
 # Generate models.json for Ollama
 MODEL="${PI_MODEL:-qwen3.6:27b}"
 
-mkdir -p /root/.pi/agent
+mkdir -p /root/.aegis/agent
 
-cat > /root/.pi/agent/models.json << EOF
+cat > /root/.aegis/agent/models.json << EOF
 {
   "providers": {
     "ollama": {
@@ -32,7 +32,7 @@ cat > /root/.pi/agent/models.json << EOF
 EOF
 
 echo "=== Generated models.json ==="
-cat /root/.pi/agent/models.json
+cat /root/.aegis/agent/models.json
 echo "=============================="
 echo ""
 echo "=== Environment ==="
@@ -41,5 +41,5 @@ echo "HOME: ${HOME}"
 echo "=================="
 echo ""
 
-# Run pi with the model
-exec pi --model "ollama/${MODEL}" --api-key "ollama" "$@"
+# Run aegis with the model
+exec aegis --model "ollama/${MODEL}" --api-key "ollama" "$@"
