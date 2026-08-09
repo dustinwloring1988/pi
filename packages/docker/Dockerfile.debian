@@ -2,6 +2,9 @@ FROM debian:bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Enable non-free repos (nikto lives in non-free)
+RUN sed -i 's/^Components: main$/Components: main non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources
+
 # Update and install basic tools + CTF pentesting essentials
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Core
