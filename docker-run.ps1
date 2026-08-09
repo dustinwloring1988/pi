@@ -37,6 +37,9 @@
 .PARAMETER ListModels
     If set, lists available models and exits.
 
+.PARAMETER NoCache
+    If set, builds Docker images with --no-cache to ensure latest packages are installed.
+
 .EXAMPLE
     .\docker-run.ps1
     Runs with Ubuntu container and default model.
@@ -71,7 +74,8 @@ param(
     [ValidateSet("none", "web", "redis")]
     [string]$VulnContainer = "none",
     [string]$AdditionalArgs = "",
-    [switch]$ListModels
+    [switch]$ListModels,
+    [switch]$NoCache
 )
 
 $ErrorActionPreference = "Stop"
@@ -87,7 +91,9 @@ if ($ContainerType -eq "ubuntu") {
 $ImageTag = "$ImageName-$ContainerType"
 
 Write-Host "Building Docker image: $ImageTag (from $ContainerType)" -ForegroundColor Cyan
-docker build -t $ImageTag -f $Dockerfile "$DockerDir"
+$BuildArgs = @("build", "-t", $ImageTag, "-f", $Dockerfile, "$DockerDir")
+if ($NoCache) { $BuildArgs = @("build", "--no-cache", "-t", $ImageTag, "-f", $Dockerfile, "$DockerDir") }
+& docker @BuildArgs
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Docker build failed."
     exit 1
@@ -105,7 +111,9 @@ if ($VulnContainer -ne "none") {
     $VulnDir = "$DockerDir\vuln\vuln-$VulnContainer"
 
     Write-Host "Building vulnerable container: vuln-$VulnContainer..." -ForegroundColor Yellow
-    docker build -t "vuln-$VulnContainer" -f "$VulnDir\Dockerfile" "$VulnDir"
+    $VulnBuildArgs = @("build", "-t", "vuln-$VulnContainer", "-f", "$VulnDir\Dockerfile", "$VulnDir")
+    if ($NoCache) { $VulnBuildArgs = @("build", "--no-cache", "-t", "vuln-$VulnContainer", "-f", "$VulnDir\Dockerfile", "$VulnDir") }
+    & docker @VulnBuildArgs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to build vulnerable container."
         exit 1
