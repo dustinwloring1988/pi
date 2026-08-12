@@ -327,6 +327,8 @@ export class AgentSession {
 	private _compactionAbortController: AbortController | undefined = undefined;
 	private _autoCompactionAbortController: AbortController | undefined = undefined;
 	private _overflowRecoveryAttempted = false;
+	private _overflowRecoveryAttempts = 0;
+	private static readonly MAX_OVERFLOW_RECOVERY_ATTEMPTS = 3;
 
 	// Branch summarization state
 	private _branchSummaryAbortController: AbortController | undefined = undefined;
@@ -334,6 +336,10 @@ export class AgentSession {
 	// Retry state
 	private _retryAbortController: AbortController | undefined = undefined;
 	private _retryAttempt = 0;
+
+	// Auto-continuation state (for text-only responses without tool calls)
+	private _autoContinueCount = 0;
+	private static readonly MAX_AUTO_CONTINUE_COUNT = 3;
 
 	// Bash execution state
 	private readonly _bashAbortControllers = new Set<AbortController>();
@@ -664,6 +670,7 @@ export class AgentSession {
 				const assistantMsg = event.message as AssistantMessage;
 				if (assistantMsg.stopReason !== "error" && assistantMsg.stopReason !== "length") {
 					this._overflowRecoveryAttempted = false;
+					this._overflowRecoveryAttempts = 0;
 				}
 
 				// Reset retry counter immediately on successful assistant response
@@ -1099,9 +1106,36 @@ export class AgentSession {
 			return true;
 		}
 
+		// Auto-continue when the model produces a text-only response without tool calls.
+		// This prevents the agent from silently stopping when the model outputs text
+		// but doesn't call any tools (common with smaller/quantized models).
+		if (
+			msg.stopReason === "stop" &&
+			this._autoContinueCount < AgentSession.MAX_AUTO_CONTINUE_COUNT &&
+			!this._hasToolCalls(msg)
+		) {
+			this._autoContinueCount++;
+			this.agent.followUp({
+				role: "user",
+				content: [{ type: "text", text: "Continue. Use your tools to make progress on the objective." }],
+				timestamp: Date.now(),
+			});
+			return true;
+		}
+
+		// Reset auto-continue counter on successful tool use or when limit is reached
+		this._autoContinueCount = 0;
+
 		// The agent loop drains both queues before emitting agent_end. Any messages
 		// here were queued by agent_end extension handlers and need a continuation.
 		return this.agent.hasQueuedMessages();
+	}
+
+	/**
+	 * Check if an assistant message contains any tool calls.
+	 */
+	private _hasToolCalls(msg: AssistantMessage): boolean {
+		return msg.content.some((part) => part.type === "toolCall");
 	}
 
 	/**
@@ -1998,20 +2032,21 @@ export class AgentSession {
 				return await this._runAutoCompaction("overflow", false);
 			}
 
-			if (this._overflowRecoveryAttempted) {
+			if (this._overflowRecoveryAttempts >= AgentSession.MAX_OVERFLOW_RECOVERY_ATTEMPTS) {
 				this._emit({
 					type: "compaction_end",
 					reason: "overflow",
 					result: undefined,
 					aborted: false,
 					willRetry: false,
-					errorMessage:
-						"Context overflow recovery failed after one compact-and-retry attempt. Try reducing context or switching to a larger-context model.",
+					errorMessage: `Context overflow recovery failed after ${AgentSession.MAX_OVERFLOW_RECOVERY_ATTEMPTS} compact-and-retry attempts. Try reducing context or switching to a larger-context model.`,
 				});
+				this._overflowRecoveryAttempts = 0;
 				return false;
 			}
 
 			this._overflowRecoveryAttempted = true;
+			this._overflowRecoveryAttempts++;
 			// Remove the failed or truncated message from agent state. It remains in session history,
 			// but must not be included in the compact-and-retry context.
 			const messages = this.agent.state.messages;

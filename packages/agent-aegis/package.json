@@ -1,6 +1,6 @@
 {
 	"name": "@buckeyestudio/agent-aegis",
-	"version": "0.84.4",
+	"version": "0.84.5",
 	"description": "Aegis security agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"piConfig": {

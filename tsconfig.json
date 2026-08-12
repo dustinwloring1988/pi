@@ -35,9 +35,11 @@
 			"@earendil-works/pi-tui": ["./packages/tui/src/index.ts"],
 			"@earendil-works/pi-tui/*": ["./packages/tui/src/*"],
 			"@earendil-works/pi-agent-old": ["./packages/agent-old/src/index.ts"],
-			"@earendil-works/pi-agent-old/*": ["./packages/agent-old/src/*"]
+			"@earendil-works/pi-agent-old/*": ["./packages/agent-old/src/*"],
+			"@earendil-works/pi-coworker": ["./packages/coworker/src/index.ts"],
+			"@earendil-works/pi-coworker/*": ["./packages/coworker/src/*"]
 		}
 	},
 	"include": ["packages/*/src/**/*", "packages/*/test/**/*", "packages/session-backends/*/src/**/*", "packages/session-backends/*/test/**/*", "packages/coding-agent/examples/**/*"],
-	"exclude": ["**/dist/**", "packages/coding-agent/examples/extensions/gondolin/**"]
+	"exclude": ["**/dist/**", "packages/coworker/src/renderer/**", "packages/coding-agent/examples/extensions/gondolin/**"]
 }

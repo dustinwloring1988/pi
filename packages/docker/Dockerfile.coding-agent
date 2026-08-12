@@ -1,0 +1,57 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    git \
+    curl \
+    wget \
+    sudo \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    python3 \
+    python3-pip \
+    python3-venv \
+    ripgrep \
+    fd-find \
+    vim \
+    nano \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/fdfind /usr/local/bin/fd
+
+RUN useradd -m -s /bin/bash agent && \
+    echo "agent:agent" | chpasswd && \
+    usermod -aG sudo agent
+
+RUN mkdir -p /workspace && chown agent:agent /workspace
+
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g --ignore-scripts pnpm bun
+
+RUN npm install -g --ignore-scripts @buckeyestudio/container-coder
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN curl -fsSL https://go.dev/dl/go1.24.5.linux-amd64.tar.gz | tar -C /usr/local -xz
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+RUN npm install -g --ignore-scripts next
+
+COPY docker-coding-agent-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+WORKDIR /workspace
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

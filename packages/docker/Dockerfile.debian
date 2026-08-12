@@ -71,6 +71,9 @@ RUN mkdir -p /root/.aegis/agent
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Copy knowledge base
+COPY knowledge/*.md /workspace/
+
 WORKDIR /workspace
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

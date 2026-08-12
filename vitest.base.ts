@@ -10,6 +10,7 @@ export const workspaceSourcePaths = {
 	aiProviders: fileURLToPath(new URL("./packages/ai/src/providers", import.meta.url)),
 	agentIndex: fileURLToPath(new URL("./packages/agent/src/index.ts", import.meta.url)),
 	codingAgentIndex: fileURLToPath(new URL("./packages/coding-agent/src/index.ts", import.meta.url)),
+	coworkerIndex: fileURLToPath(new URL("./packages/coworker/src/index.ts", import.meta.url)),
 	tuiIndex: fileURLToPath(new URL("./packages/tui/src/index.ts", import.meta.url)),
 } as const;
 
@@ -26,6 +27,7 @@ export default defineConfig({
 				replacement: `${workspaceSourcePaths.aiProviders}/$1.ts`,
 			},
 			{ find: /^@earendil-works\/pi-agent-core$/, replacement: workspaceSourcePaths.agentIndex },
+			{ find: /^@earendil-works\/pi-coworker$/, replacement: workspaceSourcePaths.coworkerIndex },
 			{ find: /^@earendil-works\/pi-tui$/, replacement: workspaceSourcePaths.tuiIndex },
 		],
 	},
